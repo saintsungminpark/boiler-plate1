@@ -3,9 +3,10 @@ const app = express()
 const port = 5000
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
-const { User } = require("./models/User")
 const cookieParser = require('cookie-parser')
-const config = require('./config/key');
+const config = require('./config/key')
+const { auth } = require('./middleware/auth')
+const { User } = require('./models/User')
 
 //application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }))
@@ -20,7 +21,7 @@ mongoose.connect(config.mongoURI, {
 
 app.get('/', (req, res) => res.send('Hello World!!!'))
 
-app.post('/register', (req, res) => {
+app.post('/api/users/register', (req, res) => {
     //회원가입할때 필요한 정보들을 client에서 가져오면
     //그것들을 DB에 넣어준다
     const user = new User(req.body)
@@ -33,7 +34,7 @@ app.post('/register', (req, res) => {
     })
 })
 
-app.post('/login', (req, res) => {
+app.post('/api/users/login', (req, res) => {
 
     //요청 된 이메일을 데이터베이스에서 찾는다
     User.findOne({ email: req.body.email }, (err, user) => {
@@ -59,6 +60,18 @@ app.post('/login', (req, res) => {
                 .json({ loginSuccess: true, userId: user._id })
             })
         })
+    })
+})
+
+app.get('/api/users/auth', auth, (req, res) => {
+    res.status(200).json({
+        _id: req.user._id,
+        isAdmin: req.user.role === 0 ? false : true,
+        email: req.user.email,
+        name: req.user.name,
+        lastname: req.user.lastname,
+        role: req.user,role,
+        image: req.user.image,
     })
 })
 
